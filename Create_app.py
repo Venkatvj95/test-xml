@@ -1,29 +1,9 @@
 import streamlit as st
 from parser import parse_siplace_xml
 from Create_rag import build_vector_db
-
-import sys
-import streamlit as st
-
-st.write(sys.version)
-
-try:
-    import langchain
-    st.success(f"LangChain version: {langchain.__version__}")
-except Exception as e:
-    st.error(f"LangChain import failed: {e}")
-
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 
-
-    
-st.set_page_config(
-    page_title="SIPLACE Assistant",
-    layout="wide"
-)
+st.set_page_config(page_title="SIPLACE Assistant", layout="wide")
 
 st.title("SIPLACE Setup Assistant")
 
@@ -32,56 +12,68 @@ uploaded_file = st.file_uploader(
     type=["xml"]
 )
 
-if uploaded_file:
+# Store current file name
+if uploaded_file is not None:
 
-    df = parse_siplace_xml(uploaded_file)
+    # Check if a new file was uploaded
+    if (
+        "current_file" not in st.session_state
+        or st.session_state.current_file != uploaded_file.name
+    ):
+
+        st.session_state.current_file = uploaded_file.name
+
+        # Parse latest XML
+        df = parse_siplace_xml(uploaded_file)
+
+        # Rebuild vector DB from latest XML
+        st.session_state.df = df
+        st.session_state.vector_db = build_vector_db(df)
+
+        st.success(f"Loaded latest XML: {uploaded_file.name}")
+
+# Display data if available
+if "df" in st.session_state:
+
+    df = st.session_state.df
 
     st.subheader("Parsed Data")
     st.dataframe(df)
 
-    empty_df = df[
-        df["Component"] == "EMPTY"
-    ]
+    empty_df = df[df["Component"] == "EMPTY"]
 
     st.subheader("Empty Locations")
     st.dataframe(empty_df)
 
-    st.success(
-        f"Total Empty Locations : {len(empty_df)}"
-    )
+    st.success(f"Total Empty Locations: {len(empty_df)}")
 
-    vector_db = build_vector_db(df)
+    question = st.chat_input("Ask a question")
 
-    llm = ChatOllama(
-        model="llama3.2"
-    )
+    if question:
 
-    # Modern replacement for RetrievalQA
-    prompt = ChatPromptTemplate.from_template("""
+        llm = ChatOllama(model="llama3.2")
+
+        docs = st.session_state.vector_db.similarity_search(
+            question,
+            k=5
+        )
+
+        context = "\n".join(
+            [doc.page_content for doc in docs]
+        )
+
+        prompt = f"""
 You are a SIPLACE machine setup assistant.
-Use the following context to answer the question.
 
 Context:
 {context}
 
-Question: {input}
+Question:
+{question}
 
-Answer:""")
+Answer:
+"""
 
-    combine_docs_chain = create_stuff_documents_chain(llm, prompt)
-    qa_chain = create_retrieval_chain(
-        vector_db.as_retriever(),
-        combine_docs_chain
-    )
+        response = llm.invoke(prompt)
 
-    question = st.chat_input(
-        "Ask a question"
-    )
-
-    if question:
-
-        response = qa_chain.invoke(
-            {"input": question}   # changed from "query" to "input"
-        )
-
-        st.write(response["answer"])  # changed from "result" to "answer"
+        st.write(response.content)
