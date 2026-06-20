@@ -4,8 +4,8 @@ pandas
 faiss-cpu
 sentence-transformers
 lxml
+langchain==0.3.26
+langchain-community==0.3.27
+langchain-core==0.3.72
 
-langchain>=0.3.0
-langchain-community>=0.3.0
-langchain-core>=0.3.0
 langchain-ollama
