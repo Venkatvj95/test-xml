@@ -2,11 +2,6 @@ import streamlit as st
 from parser import parse_siplace_xml
 from Create_rag import build_vector_db
 
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_ollama import ChatOllama
-
 import sys
 import streamlit as st
 
@@ -17,6 +12,13 @@ try:
     st.success(f"LangChain version: {langchain.__version__}")
 except Exception as e:
     st.error(f"LangChain import failed: {e}")
+
+from langchain.chains import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_ollama import ChatOllama
+
+
     
 st.set_page_config(
     page_title="SIPLACE Assistant",
