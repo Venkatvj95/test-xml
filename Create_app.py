@@ -7,7 +7,17 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 
+import sys
+import streamlit as st
 
+st.write(sys.version)
+
+try:
+    import langchain
+    st.success(f"LangChain version: {langchain.__version__}")
+except Exception as e:
+    st.error(f"LangChain import failed: {e}")
+    
 st.set_page_config(
     page_title="SIPLACE Assistant",
     layout="wide"
