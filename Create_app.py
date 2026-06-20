@@ -2,8 +2,8 @@ import streamlit as st
 from parser import parse_siplace_xml
 from Create_rag import build_vector_db
 
-from langchain_community.chains import create_retrieval_chain
-from langchain_community.chains import create_stuff_documents_chain
+from langchain.chains import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 
